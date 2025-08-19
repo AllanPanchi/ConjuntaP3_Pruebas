@@ -1,0 +1,52 @@
+{
+  "name": "lab2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --coverage",
+    "test:coverage": "jest --coverage --watchAll=false",
+    "test:ci": "jest --coverage --watchAll=false",
+    "start": "node index.js",
+    "lint": "npx eslint .",
+    "audit": "npm audit --audit-level high",
+    "build": "echo 'Build completed successfully'",
+    "serve": "firebase serve",
+    "deploy": "firebase deploy",
+    "deploy:preview": "firebase hosting:channel:deploy preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.32.0",
+    "jest": "^30.0.5",
+    "firebase-tools": "^13.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "*.js",
+      "!coverage/**",
+      "!node_modules/**",
+      "!public/**",
+      "!eslint.config.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 85,
+        "functions": 85,
+        "lines": 85,
+        "statements": 85
+      }
+    }
+  }
+}

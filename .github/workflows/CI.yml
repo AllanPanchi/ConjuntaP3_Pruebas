@@ -1,0 +1,182 @@
+# Configurar triggers
+# Nombre
+name: CI/CD Workflow - NRC B
+# Triggers (disparadores) - CI corre en push/PR a main
+on:
+    push:
+        branches: [main] 
+    pull_request: 
+        branches: [main]
+
+# Jobs
+jobs:
+    lint:
+        name: ESLint - Sin errores
+        runs-on: ubuntu-latest
+        steps:
+            - name: Clonar repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Instalar dependencias
+              run: npm ci
+            
+            - name: Ejecutar lint del codigo (sin errores)
+              run: npm run lint
+
+    security-audit:
+        name: Security Audit
+        runs-on: ubuntu-latest
+        steps:
+            - name: Clonar repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Instalar dependencias
+              run: npm ci
+            
+            - name: Auditoría de seguridad
+              run: npm run audit
+
+    test-and-coverage:
+        name: Tests with Coverage ≥85%
+        runs-on: ubuntu-latest
+        steps:
+            - name: Clonar repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Instalar dependencias
+              run: npm ci
+            
+            - name: Ejecutar pruebas con cobertura ≥85%
+              run: npm run test:ci
+
+            - name: Verificar cobertura mínima
+              run: |
+                echo "Verificando cobertura mínima ≥85% (líneas y ramas)"
+                # Jest ya verifica los thresholds configurados en package.json
+                
+            - name: Subir reporte de cobertura
+              uses: codecov/codecov-action@v3
+              with:
+                file: ./coverage/lcov.info
+                flags: unittests
+                name: codecov-coverage
+                fail_ci_if_error: true
+
+    build:
+        name: Build Application
+        runs-on: ubuntu-latest
+        needs: [lint, security-audit, test-and-coverage]
+        steps:
+            - name: Clonar repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Build exitoso
+              run: echo "Build completado exitosamente"
+
+    # Job final que bloquea PR si fallan CI o auditoría
+    status-check:
+        name: PR Status Check - Bloqueador
+        runs-on: ubuntu-latest
+        needs: [lint, security-audit, test-and-coverage, build]
+        if: always()
+        steps:
+            - name: Verificar estado de todos los jobs
+              run: |
+                echo "Verificando estado de CI para bloquear PR si es necesario..."
+                if [[ "${{ needs.lint.result }}" != "success" ]]; then
+                  echo "❌ LINT FALLÓ - PR BLOQUEADO"
+                  exit 1
+                fi
+                if [[ "${{ needs.security-audit.result }}" != "success" ]]; then
+                  echo "❌ AUDITORÍA DE SEGURIDAD FALLÓ - PR BLOQUEADO"
+                  exit 1
+                fi
+                if [[ "${{ needs.test-and-coverage.result }}" != "success" ]]; then
+                  echo "❌ TESTS O COBERTURA <85% - PR BLOQUEADO"
+                  exit 1
+                fi
+                if [[ "${{ needs.build.result }}" != "success" ]]; then
+                  echo "❌ BUILD FALLÓ - PR BLOQUEADO"
+                  exit 1
+                fi
+                echo "✅ TODOS LOS CHECKS PASARON - PR PUEDE SER MERGEADO"
+
+    # Job para despliegue de preview en PRs
+    deploy-preview:
+        name: Firebase Preview Deploy
+        runs-on: ubuntu-latest
+        needs: [lint, security-audit, test-and-coverage]
+        if: github.event_name == 'pull_request'
+        steps:
+            - name: Clonar repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Deploy a Firebase Preview
+              uses: FirebaseExtended/action-hosting-deploy@v0
+              with:
+                repoToken: '${{ secrets.GITHUB_TOKEN }}'
+                firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+                projectId: perfil-notas-estadistica
+
+    # Job para despliegue live cuando se hace merge a main
+    deploy-live:
+        name: Firebase Live Deploy
+        runs-on: ubuntu-latest
+        needs: [status-check]
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        steps:
+            - name: Clonar repositorio
+              uses: actions/checkout@v4
+
+            - name: Configurar Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'npm'
+
+            - name: Instalar dependencias
+              run: npm ci
+
+            - name: Deploy a Firebase Live
+              uses: FirebaseExtended/action-hosting-deploy@v0
+              with:
+                repoToken: '${{ secrets.GITHUB_TOKEN }}'
+                firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+                projectId: perfil-notas-estadistica
+                channelId: live
