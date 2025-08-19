@@ -9,7 +9,6 @@
     "test:ci": "jest --coverage --watchAll=false",
     "start": "node index.js",
     "lint": "npx eslint .",
-    "audit": "npm audit --audit-level high",
     "build": "echo 'Build completed successfully'",
     "serve": "firebase serve",
     "deploy": "firebase deploy",
