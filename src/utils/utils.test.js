@@ -22,7 +22,7 @@ describe('calcWeightedGrade', () => {
 
     test('debe lanzar TypeError si items no es un arreglo', () => {
         expect(() => calcWeightedGrade(null)).toThrow(TypeError);
-        expect(() => calcWeightedGrade("string")).toThrow(TypeError);
+        expect(() => calcWeightedGrade('string')).toThrow(TypeError);
         expect(() => calcWeightedGrade(123)).toThrow(TypeError);
     });
 
@@ -36,8 +36,8 @@ describe('calcWeightedGrade', () => {
     });
 
     test('debe lanzar TypeError si score o weight no son números', () => {
-        expect(() => calcWeightedGrade([{ score: "80", weight: 0.5 }])).toThrow(TypeError);
-        expect(() => calcWeightedGrade([{ score: 80, weight: "0.5" }])).toThrow(TypeError);
+        expect(() => calcWeightedGrade([{ score: '80', weight: 0.5 }])).toThrow(TypeError);
+        expect(() => calcWeightedGrade([{ score: 80, weight: '0.5' }])).toThrow(TypeError);
     });
 
     test('debe lanzar RangeError si score está fuera del rango 0-100', () => {
@@ -93,7 +93,7 @@ describe('percentile', () => {
     });
 
     test('debe lanzar TypeError si p no es un número', () => {
-        expect(() => percentile("50", [1, 2, 3])).toThrow(TypeError);
+        expect(() => percentile('50', [1, 2, 3])).toThrow(TypeError);
         expect(() => percentile(null, [1, 2, 3])).toThrow(TypeError);
     });
 
@@ -104,7 +104,7 @@ describe('percentile', () => {
 
     test('debe lanzar TypeError si values no es un arreglo', () => {
         expect(() => percentile(50, null)).toThrow(TypeError);
-        expect(() => percentile(50, "123")).toThrow(TypeError);
+        expect(() => percentile(50, '123')).toThrow(TypeError);
     });
 
     test('debe lanzar RangeError si values está vacío', () => {
@@ -112,7 +112,7 @@ describe('percentile', () => {
     });
 
     test('debe lanzar TypeError si un elemento no es un número', () => {
-        expect(() => percentile(50, [1, "2", 3])).toThrow(TypeError);
+        expect(() => percentile(50, [1, '2', 3])).toThrow(TypeError);
         expect(() => percentile(50, [1, null, 3])).toThrow(TypeError);
     });
 
